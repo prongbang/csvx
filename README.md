@@ -1,6 +1,6 @@
 # CSVX
 
-Convert array struct to csv format
+Convert array struct to csv format with Golang
 
 ## Install
 
