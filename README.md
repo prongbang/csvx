@@ -1,6 +1,6 @@
 # CSVX
 
-Convert array struct to csv format with Golang
+Convert array struct to csv format and Parse csv format to array struct with Golang 
 
 ## Install
 
@@ -8,9 +8,9 @@ Convert array struct to csv format with Golang
 go get github.com/prongbang/csvx
 ```
 
-## Define struct
+## Define struct for Convert
 
-Add `field` and `index` start with 1
+Add `field` for mapping in cav header and `index` start with 1 for sort header
 
 ```go
 type MyStruct struct {
@@ -19,7 +19,7 @@ type MyStruct struct {
 }
 ```
 
-## Using
+## Using for Convert
 
 ```go
 m := []MyStruct{
@@ -35,4 +35,39 @@ csv := csvx.Convert[MyStruct](m)
 "ID","Name Space"
 "1","N1"
 "2","N2"
+```
+
+## Define struct for Parse
+
+Add `field` for mapping in cav header
+
+```go
+type Struct struct {
+	ID   string `field:"ID"`
+	Name string `field:"Name Space"`
+}
+```
+
+## Using for Parse
+
+```go
+rows := [][]string{
+    {"ID", "Name Space"},
+    {"1", "Name1"},
+    {"2", "Name2"},
+    {"3", "Name3"},
+    {"4", "Name4"},
+}
+s := csvx.Parser[Struct](rows)
+```
+
+## Result
+
+```json
+[
+  {"ID":"1","Name":"Name1"},
+  {"ID":"2","Name":"Name2"},
+  {"ID":"3","Name":"Name3"},
+  {"ID":"4","Name":"Name4"}
+]
 ```
