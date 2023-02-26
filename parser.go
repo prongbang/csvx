@@ -1,7 +1,11 @@
 package csvx
 
 import (
+	"bufio"
+	"encoding/csv"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"reflect"
 )
 
@@ -9,6 +13,52 @@ type model[T any] struct {
 	Data T
 }
 
+// FileHeaderReader
+// file, _ := c.FormFile("file")
+// rows, err := csvx.FileHeaderReader(file)
+func FileHeaderReader(fileHeader *multipart.FileHeader) ([][]string, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return [][]string{}, err
+	}
+
+	// Parse the file
+	r := csv.NewReader(bufio.NewReader(file))
+
+	// Read the records
+	_, err = r.Read()
+	if err != nil {
+		return [][]string{}, err
+	}
+
+	// Iterate through the records
+	rows := [][]string{}
+	for {
+		// Read each record from csv
+		record, e := r.Read()
+		if e == io.EOF {
+			break
+		}
+
+		rows = append(rows, record)
+	}
+
+	return rows, nil
+}
+
+// Parser
+//
+//	type Struct struct {
+//		  ID   string `field:"ID"`
+//		  Name string `field:"Name Space"`
+//	}
+//
+//	rows := [][]string{
+//	   {"ID", "Name Space"},
+//	   {"1", "Name1"},
+//	}
+//
+// s := csvx.Parser[Struct](rows)
 func Parser[T any](rows [][]string) []T {
 	var structs []T
 
