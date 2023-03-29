@@ -46,7 +46,16 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 		for r, d := range data {
 			el := reflect.ValueOf(&d).Elem()
 
-			cols := el.NumField()
+			colsRaw := el.NumField()
+			cols := 0
+			for c := 0; c < colsRaw; c++ {
+				_, fOk := fieldLookup[T](d, c)
+				_, iOk := indexLookup[T](d, c)
+				if !fOk || !iOk {
+					continue
+				}
+				cols++
+			}
 			if headers == nil {
 				headers = make([]string, cols)
 			}
@@ -54,10 +63,13 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 				rows[r] = make([]string, cols)
 			}
 
-			for c := 0; c < cols; c++ {
+			for c := 0; c < colsRaw; c++ {
 				value := el.Field(c)
-				field := reflect.ValueOf(d).Type().Field(c).Tag.Get("field")
-				index := reflect.ValueOf(d).Type().Field(c).Tag.Get("index")
+				field, fOk := fieldLookup[T](d, c)
+				index, iOk := indexLookup[T](d, c)
+				if !fOk || !iOk {
+					continue
+				}
 
 				if i, err := strconv.Atoi(index); err == nil {
 					if r == 0 {
@@ -84,4 +96,12 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	}
 
 	return ""
+}
+
+func fieldLookup[T any](d T, c int) (string, bool) {
+	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("field")
+}
+
+func indexLookup[T any](d T, c int) (string, bool) {
+	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("index")
 }
