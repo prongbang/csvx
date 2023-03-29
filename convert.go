@@ -27,9 +27,15 @@ func Format(cell []string) string {
 //	"ID","Name"
 //	"1","N1"
 //	"2","N2"
-func Convert[T any](data []T) string {
+func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	size := len(data)
 	if size > 0 {
+
+		// Config format value
+		valueFormat := "\"%v\""
+		if len(ignoreDoubleQuote) > 0 {
+			valueFormat = "%v"
+		}
 
 		// Initialize the element
 		var headers []string
@@ -55,9 +61,13 @@ func Convert[T any](data []T) string {
 
 				if i, err := strconv.Atoi(index); err == nil {
 					if r == 0 {
-						headers[i-1] = fmt.Sprintf("\"%v\"", field)
+						headers[i-1] = fmt.Sprintf(valueFormat, field)
 					}
-					rows[r][i-1] = fmt.Sprintf("\"%v\"", value)
+					if IsFloat(value.Type()) {
+						rows[r][i-1] = fmt.Sprintf(valueFormat, F64ToString(value.Float()))
+					} else {
+						rows[r][i-1] = fmt.Sprintf(valueFormat, value)
+					}
 				}
 			}
 

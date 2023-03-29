@@ -26,6 +26,22 @@ func TestConvert(t *testing.T) {
 	}
 }
 
+func TestConvertIgnoreDoubleQuote(t *testing.T) {
+	// Given
+	m := []MyStruct{{ID: 1, Name: "N1"}, {ID: 2, Name: "N2"}}
+	expected := `ID,Name Space
+1,N1
+2,N2`
+
+	// When
+	csv := csvx.Convert[MyStruct](m, true)
+
+	// Then
+	if csv != expected {
+		t.Error("Convert error:", csv)
+	}
+}
+
 func BenchmarkConvert(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// Given
