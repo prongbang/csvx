@@ -21,7 +21,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: 1.19
+        go-version: 1.20
 
     - name: Setup GO environment
       run: |
@@ -44,7 +44,7 @@ jobs:
       if: |
         matrix.os == 'ubuntu-latest' &&
         github.event_name == 'push'
-      continue-on-error: true
+      continue-on-error: false
       
 #     - name: Test
 #       run: |
