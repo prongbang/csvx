@@ -1,5 +1,7 @@
 # CSVX
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/prongbang/csvx)](https://goreportcard.com/report/github.com/prongbang/csvx)
+
 Convert array struct to csv format and Parse csv format to array struct with Golang 
 
 ## Install
