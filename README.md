@@ -1,5 +1,7 @@
 # CSVX
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/prongbang/csvx)](https://goreportcard.com/report/github.com/prongbang/csvx)
+
 Convert array struct to csv format and Parse csv format to array struct with Golang 
 
 ## Install
@@ -10,7 +12,7 @@ go get github.com/prongbang/csvx
 
 ## Define struct for Convert
 
-Add `field` for mapping in cav header and `index` start with 1 for sort header
+Add `field` for mapping in csv header and `index` start with 1 for sort header
 
 ```go
 type MyStruct struct {
