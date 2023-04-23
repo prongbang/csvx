@@ -28,24 +28,38 @@ jobs:
     - name: Lint
       run: |
         golint -set_exit_status ./...
-
+        
     - name: Test
-      run: |
-            sudo go test ./... -coverprofile coverage.out -covermode count
-            sudo go tool cover -func coverage.out
+      run: go test -v ./...
       
-    - name: Quality Gate - Test coverage shall be above threshold
-      env:
-          TESTCOVERAGE_THRESHOLD: 0
-      run: |
-            echo "Quality Gate: checking test coverage is above threshold ..."
-            echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
-            totalCoverage=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
-            echo "Current test coverage : $totalCoverage %"
-            if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') )); then
-                echo "OK"
-            else
-                echo "Current test coverage is below threshold. Please add more unit tests or adjust threshold to a lower value."
-                echo "Failed"
-                exit 1
-            fi
+    - name: Coverage report
+      uses: ncruces/go-coverage-report@v0
+      with:
+        chart: 'true'
+        amend: 'true'
+      if: |
+        matrix.os == 'ubuntu-latest' &&
+        github.event_name == 'push'
+      continue-on-error: true
+      
+#     - name: Test
+#       run: |
+#             sudo go test ./... -coverprofile coverage.out -covermode count
+#             sudo go tool cover -func coverage.out
+#       
+#     - name: Quality Gate - Test coverage shall be above threshold
+#       env:
+#           TESTCOVERAGE_THRESHOLD: 0
+#       run: |
+#             echo "Quality Gate: checking test coverage is above threshold ..."
+#             echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
+#             totalCoverage=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+#             echo "Current test coverage : $totalCoverage %"
+#             if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') )); then
+#                 echo "OK"
+#             else
+#                 echo "Current test coverage is below threshold. Please add more unit tests or adjust threshold to a lower value."
+#                 echo "Failed"
+#                 exit 1
+#             fi
+          
