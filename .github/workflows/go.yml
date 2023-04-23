@@ -19,19 +19,33 @@ jobs:
       with:
         go-version: 1.19
 
-    - name: Build
-      run: go build -v ./...
+    - name: Setup GO environment
+      run: |
+            go mod download
+            go get -u golang.org/x/lint/golint
+            go get -t .
+    
+    - name: Lint
+      run: |
+        golint -set_exit_status ./...
 
     - name: Test
-      run: go test  -v ./...
+      run: |
+            sudo go test ./... -coverprofile coverage.out -covermode count
+            sudo go tool cover -func coverage.out
       
-    - name: Update coverage report
-      uses: ncruces/go-coverage-report@v0
-      with:
-        report: 'true'
-        chart: 'true'
-        amend: 'false'
-      if: |
-        matrix.os == 'ubuntu-latest' &&
-        github.event_name == 'push'  
-      continue-on-error: true
+    - name: Quality Gate - Test coverage shall be above threshold
+      env:
+          TESTCOVERAGE_THRESHOLD: 0
+      run: |
+            echo "Quality Gate: checking test coverage is above threshold ..."
+            echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
+            totalCoverage=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            echo "Current test coverage : $totalCoverage %"
+            if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') )); then
+                echo "OK"
+            else
+                echo "Current test coverage is below threshold. Please add more unit tests or adjust threshold to a lower value."
+                echo "Failed"
+                exit 1
+            fi
