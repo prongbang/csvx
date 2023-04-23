@@ -40,7 +40,6 @@ jobs:
       if: |
         matrix.os == 'ubuntu-latest' &&
         github.event_name == 'push'
-      continue-on-error: true
       
 #     - name: Test
 #       run: |
