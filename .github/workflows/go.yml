@@ -36,8 +36,10 @@ jobs:
     - name: Test
       run: go test -v ./...
       
-    # Go to https://github.com/USER/REPO/settings/actions
-    # - Workflow permissions -> Read and write permissions -> Save
+    # 1. Go to https://github.com/USER/REPO/settings/actions
+    #    - Workflow permissions -> Read and write permissions -> Save
+    # 2. Go to https://github.com/USER/REPO/wiki
+    #    - Create wiki
     - name: Coverage report
       uses: ncruces/go-coverage-report@v0
       with:
