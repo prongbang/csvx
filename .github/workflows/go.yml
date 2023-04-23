@@ -8,9 +8,13 @@ on:
     branches: [ "master" ]
 
 jobs:
-
+  
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    
     steps:
     - uses: actions/checkout@v3
 
@@ -40,6 +44,7 @@ jobs:
       if: |
         matrix.os == 'ubuntu-latest' &&
         github.event_name == 'push'
+      continue-on-error: true
       
 #     - name: Test
 #       run: |
