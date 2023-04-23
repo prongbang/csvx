@@ -2,7 +2,7 @@ package csvx_test
 
 import (
 	"encoding/json"
-	"tdg.com/tdg/atv/pkg/csvx"
+	"github.com/prongbang/csvx"
 	"testing"
 )
 
