@@ -13,7 +13,12 @@ type model[T any] struct {
 	Data T
 }
 
-// FileHeaderReader
+// FileHeaderReader extracts the header of a multipart file specified by the given *multipart.FileHeader parameter
+// and returns a slice of slices of strings representing the parsed header. Each slice in the result represents
+// a single header field, where the first element is the header field name and the second element is the header field value.
+// If the header is empty or cannot be parsed, an empty slice will be returned. If an error occurs during the operation,
+// an error value will be returned.
+// Ex:
 // file, _ := c.FormFile("file")
 // rows, err := csvx.FileHeaderReader(file)
 func FileHeaderReader(fileHeader *multipart.FileHeader) ([][]string, error) {
@@ -46,7 +51,11 @@ func FileHeaderReader(fileHeader *multipart.FileHeader) ([][]string, error) {
 	return rows, nil
 }
 
-// Parser
+// Parser is a generic function that takes a slice of slices of strings as input and returns a slice of values of type T,
+// where T is a type parameter that represents the desired output type. The input slice should represent a CSV file
+// or other tabular data in which each inner slice represents a single row of data, and each element in the inner slice represents
+// a single field value. This function will attempt to parse each field value into the corresponding type T using the built-in strconv package.
+// If parsing fails or the input slice is empty, an empty slice of type T will be returned.
 //
 //	type Struct struct {
 //		  ID   string `field:"ID"`

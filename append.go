@@ -5,6 +5,9 @@ import (
 	"os"
 )
 
+// Append appends the given record to the end of the file specified by the filePath parameter. The record should be
+// a slice of strings, where each string represents a field of the record. If the file does not exist, it will be created.
+// If an error occurs during the operation, an error value will be returned.
 func Append(filePath string, record []string) error {
 	// Check if the file exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {

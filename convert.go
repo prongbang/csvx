@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// Format formats a slice of strings as a single, comma-separated string. Each element in the slice will be separated
+// by a comma and a space. This function can be used to generate formatted output for CSV files or other data formats
+// that use comma-separated values. If the input slice is empty, this function will return an empty string.
 func Format(cell []string) string {
 	return strings.Join(cell, ",")
 }
