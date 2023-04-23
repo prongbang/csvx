@@ -10,7 +10,7 @@ go get github.com/prongbang/csvx
 
 ## Define struct for Convert
 
-Add `field` for mapping in cav header and `index` start with 1 for sort header
+Add `field` for mapping in csv header and `index` start with 1 for sort header
 
 ```go
 type MyStruct struct {
