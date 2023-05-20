@@ -2,8 +2,28 @@ package csvx
 
 import (
 	"reflect"
+	"regexp"
 	"strconv"
+	"strings"
 )
+
+// RemoveDoubleQuote remove double quote (") and clear unicode from text
+func RemoveDoubleQuote(text string) string {
+	text = ClearUnicode(text)
+	first := strings.Index(text, "\"")
+	last := strings.LastIndex(text, "\"")
+	if first == 0 && last == (len(text)-1) {
+		text = text[1:last]
+	}
+	return text
+}
+
+// ClearUnicode clear unicode from text
+func ClearUnicode(text string) string {
+	regex := regexp.MustCompile("^\ufeff")
+	result := regex.ReplaceAllString(text, "")
+	return strings.TrimSpace(result)
+}
 
 // IsFloat returns true if the given reflect.Type is a float32 or float64 type, and false otherwise.
 // This function can be used to check whether a given type is a floating-point type, which may be useful

@@ -14,7 +14,7 @@ type Struct struct {
 func TestParser(t *testing.T) {
 	// Given
 	rows := [][]string{
-		{"ID", "Name Space"},
+		{"\ufeffID", "Name Space"},
 		{"1", "Name1"},
 		{"2", "Name2"},
 		{"3", "Name3"},

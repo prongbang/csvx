@@ -19,3 +19,11 @@ func TestF64ToString(t *testing.T) {
 		t.Error("Actual is not eq", f)
 	}
 }
+
+func TestRemoveDoubleQuote(t *testing.T) {
+	text := "\ufeff\"hello\" world\""
+	expect := "hello\" world"
+	if csvx.RemoveDoubleQuote(text) != expect {
+		t.Error("Actual is not eq", expect)
+	}
+}

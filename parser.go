@@ -88,7 +88,8 @@ func Parser[T any](rows [][]string) []T {
 			structField := structValue.FieldByNameFunc(func(fieldName string) bool {
 				f, _ := reflect.TypeOf(record.Data).FieldByName(fieldName)
 				fieldTag := f.Tag.Get("field")
-				return fieldTag == fmt.Sprintf("%v", header[j])
+				head := RemoveDoubleQuote(header[j])
+				return fieldTag == fmt.Sprintf("%v", head)
 			})
 
 			if structField.IsValid() {
