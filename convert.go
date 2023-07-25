@@ -35,9 +35,10 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	if size > 0 {
 
 		// Config format value
+		valueFormatCore := "%v"
 		valueFormat := "\"%v\""
 		if len(ignoreDoubleQuote) > 0 {
-			valueFormat = "%v"
+			valueFormat = valueFormatCore
 		}
 
 		// Initialize the element
@@ -81,7 +82,8 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 					if IsFloat(value.Type()) {
 						rows[r][i-1] = fmt.Sprintf(valueFormat, F64ToString(value.Float()))
 					} else {
-						rows[r][i-1] = fmt.Sprintf(valueFormat, value)
+						nValue := RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value))
+						rows[r][i-1] = fmt.Sprintf(valueFormat, nValue)
 					}
 				}
 			}
