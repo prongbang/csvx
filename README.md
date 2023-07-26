@@ -42,7 +42,7 @@ csv := csvx.Convert[MyStruct](m)
 
 ## Define struct for Parse
 
-Add `field` for mapping in cav header
+Add `field` for mapping in csv header
 
 ```go
 type Struct struct {
