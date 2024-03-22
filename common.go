@@ -36,6 +36,10 @@ func IsFloat(t reflect.Type) bool {
 	return false
 }
 
+func IsPointer(t reflect.Type) bool {
+	return t.Kind() == reflect.Pointer || t.Kind() == reflect.Ptr
+}
+
 // F64ToString converts the given float64 value to a string representation.
 // The resulting string will be formatted as a decimal number with up to 10 decimal places.
 // This function can be used to convert floating-point values to string values, which may be useful
