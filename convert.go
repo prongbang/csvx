@@ -82,7 +82,12 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 					if IsFloat(value.Type()) {
 						rows[r][i-1] = fmt.Sprintf(valueFormat, F64ToString(value.Float()))
 					} else {
-						nValue := RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value))
+						nValue := ""
+						if IsPointer(value.Type()) {
+							nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value.Elem()))
+						} else {
+							nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value))
+						}
 						rows[r][i-1] = fmt.Sprintf(valueFormat, nValue)
 					}
 				}
