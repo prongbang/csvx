@@ -20,14 +20,14 @@ func ReadByte(filename string) []byte {
 	return data
 }
 
-func ToStrings(data []byte) [][]string {
+func ToStrings(data []byte, delimiter rune) [][]string {
 	// Create a bytes.Reader from the byte slice
 	byteReader := bytes.NewReader(data)
 
 	// Parse the file
 	r := csv.NewReader(byteReader)
 	r.LazyQuotes = true
-	r.Comma = ','             // Set the field delimiter (default is comma)
+	r.Comma = delimiter       // Set the field delimiter (default is comma)
 	r.Comment = '#'           // Set the comment character (lines beginning with this are ignored)
 	r.FieldsPerRecord = -1    // Allow variable number of fields per record
 	r.TrimLeadingSpace = true // Trim leading space from fields
