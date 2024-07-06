@@ -119,3 +119,11 @@ func ParserFunc(excludeHeader bool, rows [][]string, onRecord func([]string) err
 	}
 	return nil
 }
+
+func ParserByIoReader[T any](ir io.Reader, delimiter ...rune) []T {
+	d := ','
+	if len(delimiter) > 0 {
+		d = delimiter[0]
+	}
+	return Parser[T](IoReader(ir, d))
+}
