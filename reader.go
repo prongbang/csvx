@@ -20,27 +20,24 @@ func ReadByte(filename string) []byte {
 	return data
 }
 
-func ByteReader(data []byte, delimiter ...rune) [][]string {
+func ByteReader(data []byte, options ...func(r *csv.Reader)) [][]string {
 	// Create a bytes.Reader from the byte slice
 	byteReader := bytes.NewReader(data)
 
 	// Parse the file
 	r := csv.NewReader(byteReader)
 
-	return Reader(r, delimiter...)
+	return Reader(r, options...)
 }
 
-func Reader(r *csv.Reader, delimiter ...rune) [][]string {
+func Reader(r *csv.Reader, options ...func(r *csv.Reader)) [][]string {
 	r.LazyQuotes = true
-	if len(delimiter) > 0 {
-		r.Comma = delimiter[0]
-	} else {
-		r.Comma = ',' // Set the field delimiter (default is comma)
+	r.Comma = ','
+	r.Comment = '#' // Set the comment character (lines beginning with this are ignored)
+
+	for _, option := range options {
+		option(r)
 	}
-	r.Comment = '#'           // Set the comment character (lines beginning with this are ignored)
-	r.FieldsPerRecord = -1    // Allow variable number of fields per record
-	r.TrimLeadingSpace = true // Trim leading space from fields
-	r.ReuseRecord = true      // Reuse the backing array for performance
 
 	// Iterate through the records
 	rows := [][]string{}

@@ -125,5 +125,7 @@ func ParserByReader[T any](ir *csv.Reader, delimiter ...rune) []T {
 	if len(delimiter) > 0 {
 		d = delimiter[0]
 	}
-	return Parser[T](Reader(ir, d))
+	return Parser[T](Reader(ir, func(r *csv.Reader) {
+		r.Comma = d
+	}))
 }
