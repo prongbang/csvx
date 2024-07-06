@@ -26,35 +26,17 @@ func ByteReader(data []byte, delimiter ...rune) [][]string {
 
 	// Parse the file
 	r := csv.NewReader(byteReader)
+
+	return Reader(r, delimiter...)
+}
+
+func Reader(r *csv.Reader, delimiter ...rune) [][]string {
 	r.LazyQuotes = true
-	r.Comment = '#'           // Set the comment character (lines beginning with this are ignored)
-	r.FieldsPerRecord = -1    // Allow variable number of fields per record
-	r.TrimLeadingSpace = true // Trim leading space from fields
-	r.ReuseRecord = true      // Reuse the backing array for performance
 	if len(delimiter) > 0 {
 		r.Comma = delimiter[0]
 	} else {
 		r.Comma = ',' // Set the field delimiter (default is comma)
 	}
-
-	// Iterate through the records
-	rows := [][]string{}
-	for {
-		// Read each record from csv
-		record, e := r.Read()
-		if e == io.EOF {
-			break
-		}
-		rows = append(rows, record)
-	}
-
-	return rows
-}
-
-func IoReader(ir io.Reader, delimiter rune) [][]string {
-	r := csv.NewReader(ir)
-	r.LazyQuotes = true
-	r.Comma = delimiter       // Set the field delimiter (default is comma)
 	r.Comment = '#'           // Set the comment character (lines beginning with this are ignored)
 	r.FieldsPerRecord = -1    // Allow variable number of fields per record
 	r.TrimLeadingSpace = true // Trim leading space from fields
