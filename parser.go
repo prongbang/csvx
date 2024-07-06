@@ -102,3 +102,20 @@ func Parser[T any](rows [][]string) []T {
 
 	return structs
 }
+
+// ParserFunc
+//
+//	err := csvx.ParserFunc(true, rows, func (record []string) {
+//		return nil
+//	})
+func ParserFunc(excludeHeader bool, rows [][]string, onRecord func([]string) error) error {
+	for i, row := range rows {
+		if excludeHeader && i == 0 {
+			continue
+		}
+		if err := onRecord(row); err != nil {
+			return err
+		}
+	}
+	return nil
+}
