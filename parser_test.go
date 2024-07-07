@@ -2,6 +2,7 @@ package csvx_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/prongbang/csvx"
 	"testing"
 )
@@ -66,4 +67,21 @@ func TestParser(t *testing.T) {
 	if c != csvExpected {
 		t.Error("Convert struct format to csv error", c)
 	}
+}
+
+func TestParserFunc(t *testing.T) {
+	// Given
+	rows := [][]string{
+		{"\ufeffID", "Name Space"},
+		{"1", "Name1"},
+		{"2", "Name2"},
+		{"3", "Name3"},
+		{"4", "Name4"},
+	}
+
+	// When
+	_ = csvx.ParserFunc(true, rows, func(record []string) error {
+		fmt.Println(record)
+		return nil
+	})
 }

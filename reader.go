@@ -1,6 +1,11 @@
 package csvx
 
-import "os"
+import (
+	"bytes"
+	"encoding/csv"
+	"io"
+	"os"
+)
 
 // ReadByte reads the entire contents of the file with the specified filename and returns them as a slice of bytes.
 // If an error occurs during the operation, a nil slice will be returned. This function can be used to read the contents
@@ -8,9 +13,42 @@ import "os"
 // large files, as it reads the entire file into memory at once. For large files, consider using the os package or
 // a buffered reader to read the file in smaller chunks.
 func ReadByte(filename string) []byte {
-	bytes, err := os.ReadFile(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return []byte{}
 	}
-	return bytes
+	return data
+}
+
+func ByteReader(data []byte, options ...func(r *csv.Reader)) [][]string {
+	// Create a bytes.Reader from the byte slice
+	byteReader := bytes.NewReader(data)
+
+	// Parse the file
+	r := csv.NewReader(byteReader)
+
+	return Reader(r, options...)
+}
+
+func Reader(r *csv.Reader, options ...func(r *csv.Reader)) [][]string {
+	r.LazyQuotes = true
+	r.Comma = ','
+	r.Comment = '#' // Set the comment character (lines beginning with this are ignored)
+
+	for _, option := range options {
+		option(r)
+	}
+
+	// Iterate through the records
+	rows := [][]string{}
+	for {
+		// Read each record from csv
+		record, e := r.Read()
+		if e == io.EOF {
+			break
+		}
+		rows = append(rows, record)
+	}
+
+	return rows
 }

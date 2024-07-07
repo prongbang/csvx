@@ -169,3 +169,30 @@ func Parser[T any](rows [][]string) []T {
 
 	return structs
 }
+
+// ParserFunc
+//
+//	err := csvx.ParserFunc(true, rows, func (record []string) {
+//		return nil
+//	})
+func ParserFunc(excludeHeader bool, rows [][]string, onRecord func([]string) error) error {
+	for i, row := range rows {
+		if excludeHeader && i == 0 {
+			continue
+		}
+		if err := onRecord(row); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ParserByReader[T any](ir *csv.Reader, delimiter ...rune) []T {
+	d := ','
+	if len(delimiter) > 0 {
+		d = delimiter[0]
+	}
+	return Parser[T](Reader(ir, func(r *csv.Reader) {
+		r.Comma = d
+	}))
+}
