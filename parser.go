@@ -7,6 +7,8 @@ import (
 	"io"
 	"mime/multipart"
 	"reflect"
+	"strconv"
+	"time"
 )
 
 type model[T any] struct {
@@ -51,15 +53,15 @@ func FileHeaderReader(fileHeader *multipart.FileHeader) ([][]string, error) {
 	return rows, nil
 }
 
-// Parser is a generic function that takes a slice of slices of strings as input and returns a slice of values of type T,
+// ParserString is a generic function that takes a slice of slices of strings as input and returns a slice of values of type T,
 // where T is a type parameter that represents the desired output type. The input slice should represent a CSV file
 // or other tabular data in which each inner slice represents a single row of data, and each element in the inner slice represents
 // a single field value. This function will attempt to parse each field value into the corresponding type T using the built-in strconv package.
 // If parsing fails or the input slice is empty, an empty slice of type T will be returned.
 //
 //	type Struct struct {
-//		  ID   string `field:"ID"`
-//		  Name string `field:"Name Space"`
+//		  ID   string `header:"ID"`
+//		  Name string `header:"Name Space"`
 //	}
 //
 //	rows := [][]string{
@@ -67,7 +69,42 @@ func FileHeaderReader(fileHeader *multipart.FileHeader) ([][]string, error) {
 //	   {"1", "Name1"},
 //	}
 //
-// s := csvx.Parser[Struct](rows)
+// s := csvx.ParserString[Struct](rows)
+func ParserString[T any](rows [][]string) []T {
+	var structs []T
+
+	if len(rows) == 0 {
+		return structs
+	}
+
+	header := rows[0]
+	for i, row := range rows {
+		if i == 0 {
+			continue
+		}
+
+		record := model[T]{}
+		structValue := reflect.ValueOf(&record.Data).Elem()
+
+		for j, field := range row {
+			structField := structValue.FieldByNameFunc(func(fieldName string) bool {
+				f, _ := reflect.TypeOf(record.Data).FieldByName(fieldName)
+				fieldTag := f.Tag.Get("header")
+				head := RemoveDoubleQuote(header[j])
+				return fieldTag == fmt.Sprintf("%v", head)
+			})
+
+			if structField.IsValid() {
+				structField.SetString(field)
+			}
+		}
+
+		structs = append(structs, record.Data)
+	}
+
+	return structs
+}
+
 func Parser[T any](rows [][]string) []T {
 	var structs []T
 
@@ -87,13 +124,43 @@ func Parser[T any](rows [][]string) []T {
 		for j, field := range row {
 			structField := structValue.FieldByNameFunc(func(fieldName string) bool {
 				f, _ := reflect.TypeOf(record.Data).FieldByName(fieldName)
-				fieldTag := f.Tag.Get("field")
+				fieldTag := f.Tag.Get("header")
 				head := RemoveDoubleQuote(header[j])
 				return fieldTag == fmt.Sprintf("%v", head)
 			})
 
 			if structField.IsValid() {
-				structField.SetString(field)
+				// Convert the value based on the field kind
+				switch structField.Kind() {
+				case reflect.String:
+					structField.SetString(field)
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+					value, err := strconv.ParseInt(field, 10, 64)
+					if err == nil {
+						structField.SetInt(value)
+					}
+				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					value, err := strconv.ParseUint(field, 10, 64)
+					if err == nil {
+						structField.SetUint(value)
+					}
+				case reflect.Float32, reflect.Float64:
+					value, err := strconv.ParseFloat(field, 64)
+					if err == nil {
+						structField.SetFloat(value)
+					}
+				case reflect.Bool:
+					value, err := strconv.ParseBool(field)
+					if err == nil {
+						structField.SetBool(value)
+					}
+				case reflect.Struct:
+					// Assuming the time is represented in the format "2006-01-02 15:04:05"
+					value, err := time.Parse("2006-01-02 15:04:05", field)
+					if err == nil {
+						structField.Set(reflect.ValueOf(value))
+					}
+				}
 			}
 		}
 

@@ -17,8 +17,8 @@ Add `field` for mapping in csv header and `index` start with 1 for sort header
 
 ```go
 type MyStruct struct {
-    Name string `json:"name" field:"Name Space" index:"2"`
-    ID   int    `json:"id" field:"ID" index:"1"`
+    Name string `json:"name" header:"Name Space" no:"2"`
+    ID   int    `json:"id" header:"ID" no:"1"`
 }
 ```
 
@@ -46,8 +46,8 @@ Add `field` for mapping in cav header
 
 ```go
 type Struct struct {
-	ID   string `field:"ID"`
-	Name string `field:"Name Space"`
+	ID   string `header:"ID"`
+	Name string `header:"Name Space"`
 }
 ```
 

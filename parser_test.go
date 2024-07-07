@@ -7,11 +7,17 @@ import (
 )
 
 type Struct struct {
-	ID   string `field:"ID"`
-	Name string `field:"Name Space"`
+	ID   string `header:"ID"`
+	Name string `header:"Name Space"`
 }
 
-func TestParser(t *testing.T) {
+type StructType struct {
+	ID   int64   `header:"ID" no:"1"`
+	Name string  `header:"Name Space" no:"2"`
+	Age  float64 `header:"Age" no:"3"`
+}
+
+func TestParserString(t *testing.T) {
 	// Given
 	rows := [][]string{
 		{"\ufeffID", "Name Space"},
@@ -23,11 +29,41 @@ func TestParser(t *testing.T) {
 	expected := `[{"ID":"1","Name":"Name1"},{"ID":"2","Name":"Name2"},{"ID":"3","Name":"Name3"},{"ID":"4","Name":"Name4"}]`
 
 	// When
-	s := csvx.Parser[Struct](rows)
+	s := csvx.ParserString[Struct](rows)
 
 	// Then
 	data, _ := json.Marshal(s)
 	if string(data) != expected {
 		t.Error("Parse csv format to array struct error", data)
+	}
+}
+
+func TestParser(t *testing.T) {
+	// Given
+	rows := [][]string{
+		{"\ufeffID", "Name Space", "Age"},
+		{"1", "Name1", "3.14"},
+		{"2", "Name2", "3.14"},
+		{"3", "Name3", "3.14"},
+		{"4", "Name4", "3.14"},
+	}
+	jsonExpected := `[{"ID":1,"Name":"Name1","Age":3.14},{"ID":2,"Name":"Name2","Age":3.14},{"ID":3,"Name":"Name3","Age":3.14},{"ID":4,"Name":"Name4","Age":3.14}]`
+	csvExpected := `"ID","Name Space","Age"
+"1","Name1","3.14"
+"2","Name2","3.14"
+"3","Name3","3.14"
+"4","Name4","3.14"`
+
+	// When
+	s := csvx.Parser[StructType](rows)
+	c := csvx.Convert[StructType](s)
+
+	// Then
+	data, _ := json.Marshal(s)
+	if string(data) != jsonExpected {
+		t.Error("Parse csv format to array struct error", string(data))
+	}
+	if c != csvExpected {
+		t.Error("Convert struct format to csv error", c)
 	}
 }

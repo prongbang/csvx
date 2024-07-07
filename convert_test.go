@@ -6,8 +6,8 @@ import (
 )
 
 type MyStruct struct {
-	Name string `json:"name" db:"name" field:"Name Space" index:"2"`
-	ID   int    `json:"id" db:"id" field:"ID" index:"1"`
+	Name string `json:"name" db:"name" header:"Name Space" no:"2"`
+	ID   int    `json:"id" db:"id" header:"ID" no:"1"`
 }
 
 func TestConvert(t *testing.T) {

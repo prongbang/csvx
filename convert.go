@@ -18,8 +18,8 @@ func Format(cell []string) string {
 // Struct supported
 //
 //	type MyStruct struct {
-//		Name string `json:"name" field:"Name" index:"2"`
-//		ID   int    `json:"id" field:"ID" index:"1"`
+//		Name string `json:"name" header:"Name" no:"2"`
+//		ID   int    `json:"id" header:"ID" no:"1"`
 //	}
 //
 // m := []MyStruct{{ID: 1, Name: "N1"}, {ID: 2, Name: "N2"}}
@@ -102,9 +102,9 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 }
 
 func fieldLookup[T any](d T, c int) (string, bool) {
-	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("field")
+	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("header")
 }
 
 func indexLookup[T any](d T, c int) (string, bool) {
-	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("index")
+	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("no")
 }
