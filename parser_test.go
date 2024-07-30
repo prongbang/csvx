@@ -18,6 +18,12 @@ type StructType struct {
 	Age  float64 `header:"Age" no:"3"`
 }
 
+type StructPointerType struct {
+	ID   *int64   `header:"ID" no:"1"`
+	Name *string  `header:"Name Space" no:"2"`
+	Age  *float64 `header:"Age" no:"3"`
+}
+
 func TestParserString(t *testing.T) {
 	// Given
 	rows := [][]string{
@@ -58,6 +64,36 @@ func TestParser(t *testing.T) {
 	// When
 	s := csvx.Parser[StructType](rows)
 	c := csvx.Convert[StructType](s)
+
+	// Then
+	data, _ := json.Marshal(s)
+	if string(data) != jsonExpected {
+		t.Error("Parse csv format to array struct error", string(data))
+	}
+	if c != csvExpected {
+		t.Error("Convert struct format to csv error", c)
+	}
+}
+
+func TestParserPointer(t *testing.T) {
+	// Given
+	rows := [][]string{
+		{"\ufeffID", "Name Space", "Age"},
+		{"1", "Name1", "N/A"},
+		{"2", "Name2", ""},
+		{"3", "Name3", "3.14"},
+		{"4", "Name4", "3.14"},
+	}
+	jsonExpected := `[{"ID":1,"Name":"Name1","Age":null},{"ID":2,"Name":"Name2","Age":null},{"ID":3,"Name":"Name3","Age":3.14},{"ID":4,"Name":"Name4","Age":3.14}]`
+	csvExpected := `"ID","Name Space","Age"
+"1","Name1",""
+"2","Name2",""
+"3","Name3","3.14"
+"4","Name4","3.14"`
+
+	// When
+	s := csvx.Parser[StructPointerType](rows)
+	c := csvx.Convert[StructPointerType](s)
 
 	// Then
 	data, _ := json.Marshal(s)

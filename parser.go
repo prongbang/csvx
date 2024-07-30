@@ -8,7 +8,6 @@ import (
 	"mime/multipart"
 	"reflect"
 	"strconv"
-	"time"
 )
 
 type model[T any] struct {
@@ -132,33 +131,74 @@ func Parser[T any](rows [][]string) []T {
 			if structField.IsValid() {
 				// Convert the value based on the field kind
 				switch structField.Kind() {
-				case reflect.String:
-					structField.SetString(field)
-				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-					value, err := strconv.ParseInt(field, 10, 64)
-					if err == nil {
-						structField.SetInt(value)
+				case reflect.Ptr:
+					// Handle pointer types
+					fieldType := structField.Type()
+					elemType := fieldType.Elem()
+					ptrValue := reflect.New(elemType)
+					switch elemType.Kind() {
+					case reflect.String:
+						ptrValue.Elem().SetString(field)
+					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+						value, err := strconv.ParseInt(field, 10, 64)
+						if err == nil {
+							ptrValue.Elem().SetInt(value)
+						} else {
+							structField.Set(reflect.Zero(fieldType))
+							continue
+						}
+					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+						value, err := strconv.ParseUint(field, 10, 64)
+						if err == nil {
+							ptrValue.Elem().SetUint(value)
+						} else {
+							structField.Set(reflect.Zero(fieldType))
+							continue
+						}
+					case reflect.Float32, reflect.Float64:
+						value, err := strconv.ParseFloat(field, 64)
+						if err == nil {
+							ptrValue.Elem().SetFloat(value)
+						} else {
+							structField.Set(reflect.Zero(fieldType))
+							continue
+						}
+					case reflect.Bool:
+						value, err := strconv.ParseBool(field)
+						if err == nil {
+							ptrValue.Elem().SetBool(value)
+						}
+					case reflect.Struct:
+						ptrValue.Elem().Set(reflect.ValueOf(field))
 					}
-				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-					value, err := strconv.ParseUint(field, 10, 64)
-					if err == nil {
-						structField.SetUint(value)
-					}
-				case reflect.Float32, reflect.Float64:
-					value, err := strconv.ParseFloat(field, 64)
-					if err == nil {
-						structField.SetFloat(value)
-					}
-				case reflect.Bool:
-					value, err := strconv.ParseBool(field)
-					if err == nil {
-						structField.SetBool(value)
-					}
-				case reflect.Struct:
-					// Assuming the time is represented in the format "2006-01-02 15:04:05"
-					value, err := time.Parse("2006-01-02 15:04:05", field)
-					if err == nil {
-						structField.Set(reflect.ValueOf(value))
+					structField.Set(ptrValue)
+				default:
+					// Handle non-pointer types as before
+					switch structField.Kind() {
+					case reflect.String:
+						structField.SetString(field)
+					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+						value, err := strconv.ParseInt(field, 10, 64)
+						if err == nil {
+							structField.SetInt(value)
+						}
+					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+						value, err := strconv.ParseUint(field, 10, 64)
+						if err == nil {
+							structField.SetUint(value)
+						}
+					case reflect.Float32, reflect.Float64:
+						value, err := strconv.ParseFloat(field, 64)
+						if err == nil {
+							structField.SetFloat(value)
+						}
+					case reflect.Bool:
+						value, err := strconv.ParseBool(field)
+						if err == nil {
+							structField.SetBool(value)
+						}
+					case reflect.Struct:
+						structField.Set(reflect.ValueOf(field))
 					}
 				}
 			}

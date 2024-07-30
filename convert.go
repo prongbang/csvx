@@ -84,7 +84,9 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 					} else {
 						nValue := ""
 						if IsPointer(value.Type()) {
-							nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value.Elem()))
+							if value.Elem().IsValid() {
+								nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value.Elem()))
+							}
 						} else {
 							nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value))
 						}
