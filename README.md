@@ -15,7 +15,7 @@ go get github.com/prongbang/csvx
 
 ## Define struct for Convert
 
-Add `field` for mapping in csv header and `index` start with 1 for sort header
+Add `header` for mapping in csv header and `no` start with 1 for sort header
 
 ```go
 type MyStruct struct {
@@ -44,7 +44,7 @@ csv := csvx.Convert[MyStruct](m)
 
 ## Define struct for Parse
 
-Add `field` for mapping in csv header
+Add `header` for mapping in csv header
 
 ```go
 type Struct struct {
