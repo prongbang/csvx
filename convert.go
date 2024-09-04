@@ -1,6 +1,8 @@
 package csvx
 
 import (
+	"bytes"
+	"encoding/csv"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -53,8 +55,8 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 			colsRaw := el.NumField()
 			cols := 0
 			for c := 0; c < colsRaw; c++ {
-				_, fOk := fieldLookup[T](d, c)
-				_, iOk := indexLookup[T](d, c)
+				_, fOk := headerLookup[T](d, c)
+				_, iOk := noLookup[T](d, c)
 				if !fOk || !iOk {
 					continue
 				}
@@ -69,8 +71,8 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 
 			for c := 0; c < colsRaw; c++ {
 				value := el.Field(c)
-				field, fOk := fieldLookup[T](d, c)
-				index, iOk := indexLookup[T](d, c)
+				field, fOk := headerLookup[T](d, c)
+				index, iOk := noLookup[T](d, c)
 				if !fOk || !iOk {
 					continue
 				}
@@ -110,10 +112,99 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	return ""
 }
 
-func fieldLookup[T any](d T, c int) (string, bool) {
+func ManualConvert[T any](data []T, headers []string, onRecord func(data T) []string) string {
+	size := len(data)
+	if size == 0 {
+		return ""
+	}
+
+	var buffer bytes.Buffer
+	w := csv.NewWriter(&buffer)
+
+	_ = w.Write(headers)
+	for _, d := range data {
+		row := onRecord(d)
+		_ = w.Write(row)
+	}
+	w.Flush()
+	return buffer.String()
+}
+
+func TryConvert[T any](data []T) string {
+	if len(data) == 0 {
+		return ""
+	}
+
+	// Use reflection to get the type of the struct
+	t := reflect.TypeOf(data[0])
+
+	cols := 0
+	numField := t.NumField()
+	hmap := make(map[int]string)
+	nmap := make(map[int]int)
+	for i := 0; i < numField; i++ {
+		header, hOk := headerLookup[T](data[0], i)
+		noStr, nOk := noLookup[T](data[0], i)
+		if hOk && nOk {
+			no, err := strconv.Atoi(noStr)
+			if err != nil {
+				continue
+			}
+			// Convert to index of array
+			index := no - 1
+			nmap[index] = i
+			hmap[index] = header
+			cols += 1
+		}
+	}
+
+	var buffer bytes.Buffer
+	w := csv.NewWriter(&buffer)
+
+	headers := make([]string, cols)
+	for r, d := range data {
+		el := reflect.ValueOf(&d).Elem()
+		record := make([]string, cols)
+		for c := 0; c < cols; c++ {
+			idx := nmap[c]
+
+			// Header
+			header := hmap[c]
+			if r == 0 {
+				headers[c] = fmt.Sprintf("%v", header)
+			}
+
+			// Records
+			field := el.Field(idx)
+
+			if IsFloat(field.Type()) {
+				record[c] = fmt.Sprintf("%v", F64ToString(field.Float()))
+			} else {
+				value := ""
+				if IsPointer(field.Type()) {
+					if field.Elem().IsValid() {
+						value = fmt.Sprintf("%v", field.Elem())
+					}
+				} else {
+					value = fmt.Sprintf("%v", field)
+				}
+				record[c] = fmt.Sprintf("%v", value)
+			}
+		}
+		if r == 0 {
+			_ = w.Write(headers)
+		}
+		_ = w.Write(record)
+	}
+
+	w.Flush()
+	return buffer.String()
+}
+
+func headerLookup[T any](d T, c int) (string, bool) {
 	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("header")
 }
 
-func indexLookup[T any](d T, c int) (string, bool) {
+func noLookup[T any](d T, c int) (string, bool) {
 	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("no")
 }

@@ -19,8 +19,9 @@ Add `header` for mapping in csv header and `no` start with 1 for sort header
 
 ```go
 type MyStruct struct {
-    Name string `json:"name" header:"Name Space" no:"2"`
-    ID   int    `json:"id" header:"ID" no:"1"`
+    Name  string `json:"name" header:"Name Space" no:"2"`
+    ID    int    `json:"id" header:"ID" no:"1"`
+    Other string
 }
 ```
 
@@ -75,4 +76,19 @@ s := csvx.Parser[Struct](rows)
   {"ID":"3","Name":"Name3"},
   {"ID":"4","Name":"Name4"}
 ]
+```
+
+## Benchmark
+
+```shell
+goos: darwin
+goarch: arm64
+pkg: github.com/prongbang/csvx
+cpu: Apple M1 Pro
+BenchmarkConvert
+BenchmarkConvert-10          	  226432	      5396 ns/op
+BenchmarkManualConvert
+BenchmarkManualConvert-10    	 1802002	       682.3 ns/op
+BenchmarkTryConvert
+BenchmarkTryConvert-10       	  608346	      1890 ns/op
 ```
