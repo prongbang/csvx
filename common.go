@@ -2,26 +2,24 @@ package csvx
 
 import (
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 )
 
+const bom = "\ufeff"
+
 // RemoveDoubleQuote remove double quote (") and clear unicode from text
 func RemoveDoubleQuote(text string) string {
 	text = ClearUnicode(text)
-	first := strings.Index(text, "\"")
-	last := strings.LastIndex(text, "\"")
-	if first == 0 && last == (len(text)-1) {
-		text = text[1:last]
+	if len(text) >= 2 && text[0] == '"' && text[len(text)-1] == '"' {
+		text = text[1 : len(text)-1]
 	}
 	return text
 }
 
 // ClearUnicode clear unicode from text
 func ClearUnicode(text string) string {
-	regex := regexp.MustCompile("^\ufeff")
-	result := regex.ReplaceAllString(text, "")
+	result := strings.TrimPrefix(text, bom)
 	return strings.TrimSpace(result)
 }
 

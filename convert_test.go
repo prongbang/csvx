@@ -62,10 +62,6 @@ func BenchmarkConvert(b *testing.B) {
 	}
 }
 
-/*
-BenchmarkManualConvert
-BenchmarkManualConvert-10    	 2002738	       606.5 ns/op
-*/
 func BenchmarkManualConvert(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// Given
@@ -93,15 +89,13 @@ func BenchmarkManualConvert(b *testing.B) {
 	}
 }
 
-// BenchmarkTryConvert
-// BenchmarkTryConvert-10    	  649724	      1800 ns/op
 func BenchmarkTryConvert(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// Given
 		m := []MyStruct{{ID: 1, Name: "N1"}, {ID: 2, Name: "N2"}}
 		expected := `ID,Name Space
-1,N1
-2,N2
+"1","N1"
+"2","N2"
 `
 
 		// When

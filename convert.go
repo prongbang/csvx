@@ -130,9 +130,16 @@ func ManualConvert[T any](data []T, headers []string, onRecord func(data T) []st
 	return buffer.String()
 }
 
-func TryConvert[T any](data []T) string {
+func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	if len(data) == 0 {
 		return ""
+	}
+
+	// Config format value
+	valueFormatCore := "%v"
+	valueFormat := "\"%v\""
+	if len(ignoreDoubleQuote) > 0 {
+		valueFormat = valueFormatCore
 	}
 
 	// Use reflection to get the type of the struct
@@ -158,47 +165,48 @@ func TryConvert[T any](data []T) string {
 		}
 	}
 
-	var buffer bytes.Buffer
-	w := csv.NewWriter(&buffer)
+	var headers strings.Builder
+	var records strings.Builder
 
-	headers := make([]string, cols)
 	for r, d := range data {
 		el := reflect.ValueOf(&d).Elem()
-		record := make([]string, cols)
 		for c := 0; c < cols; c++ {
 			idx := nmap[c]
 
 			// Header
 			header := hmap[c]
 			if r == 0 {
-				headers[c] = fmt.Sprintf("%v", header)
+				headers.WriteString(fmt.Sprintf("%v", header))
+				if c < cols-1 {
+					headers.WriteString(",")
+				}
 			}
 
 			// Records
 			field := el.Field(idx)
 
 			if IsFloat(field.Type()) {
-				record[c] = fmt.Sprintf("%v", F64ToString(field.Float()))
+				records.WriteString(fmt.Sprintf(valueFormat, F64ToString(field.Float())))
 			} else {
 				value := ""
 				if IsPointer(field.Type()) {
 					if field.Elem().IsValid() {
-						value = fmt.Sprintf("%v", field.Elem())
+						value = fmt.Sprintf(valueFormatCore, field.Elem())
 					}
 				} else {
-					value = fmt.Sprintf("%v", field)
+					value = fmt.Sprintf(valueFormatCore, field)
 				}
-				record[c] = fmt.Sprintf("%v", value)
+				records.WriteString(fmt.Sprintf(valueFormat, value))
+			}
+			if c < cols-1 {
+				records.WriteString(",")
+			} else {
+				records.WriteString("\n")
 			}
 		}
-		if r == 0 {
-			_ = w.Write(headers)
-		}
-		_ = w.Write(record)
 	}
 
-	w.Flush()
-	return buffer.String()
+	return fmt.Sprintf("%s\n%s", headers.String(), records.String())
 }
 
 func headerLookup[T any](d T, c int) (string, bool) {

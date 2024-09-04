@@ -25,6 +25,12 @@ type MyStruct struct {
 }
 ```
 
+## Support type
+
+- `int`, `int8`, `int16`, `int32`, `int64`
+- `string`
+- `float64`
+
 ## Using for Convert
 
 ```go
@@ -85,9 +91,9 @@ goos: darwin
 goarch: arm64
 pkg: github.com/prongbang/csvx
 cpu: Apple M1 Pro
-BenchmarkConvert-10          	  212218	      5751 ns/op
+BenchmarkConvert-10          	  430015	      5751 ns/op
 BenchmarkManualConvert
-BenchmarkManualConvert-10    	 1960164	       614.8 ns/op
+BenchmarkManualConvert-10    	 2002738	       614.8 ns/op
 BenchmarkTryConvert
-BenchmarkTryConvert-10       	  615027	      1889 ns/op
+BenchmarkTryConvert-10    	      760494	      1573 ns/op
 ```
