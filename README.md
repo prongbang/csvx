@@ -85,10 +85,9 @@ goos: darwin
 goarch: arm64
 pkg: github.com/prongbang/csvx
 cpu: Apple M1 Pro
-BenchmarkConvert
-BenchmarkConvert-10          	  226432	      5396 ns/op
+BenchmarkConvert-10          	  212218	      5751 ns/op
 BenchmarkManualConvert
-BenchmarkManualConvert-10    	 1802002	       682.3 ns/op
+BenchmarkManualConvert-10    	 1960164	       614.8 ns/op
 BenchmarkTryConvert
-BenchmarkTryConvert-10       	  608346	      1890 ns/op
+BenchmarkTryConvert-10       	  615027	      1889 ns/op
 ```
