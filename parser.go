@@ -104,6 +104,8 @@ func ParserString[T any](rows [][]string) []T {
 	return structs
 }
 
+// Parser parses the provided input data and returns the result.
+// It handles different formats based on the input type.
 func Parser[T any](rows [][]string) []T {
 	var structs []T
 
@@ -210,7 +212,8 @@ func Parser[T any](rows [][]string) []T {
 	return structs
 }
 
-// ParserFunc
+// ParserFunc processes the input data using a custom parsing function.
+// This allows for flexible and reusable parsing logic.
 //
 //	err := csvx.ParserFunc(true, rows, func (record []string) {
 //		return nil
@@ -227,6 +230,8 @@ func ParserFunc(excludeHeader bool, rows [][]string, onRecord func([]string) err
 	return nil
 }
 
+// ParserByReader parses data from an io.Reader and returns the result.
+// This is useful for streaming data or reading from large files.
 func ParserByReader[T any](ir *csv.Reader, delimiter ...rune) []T {
 	d := ','
 	if len(delimiter) > 0 {

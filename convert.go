@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+// Utf8BOM represents the Byte Order Mark (BOM) for UTF-8 encoding.
+// It is used to signal UTF-8 encoding in text files for better compatibility with tools like Excel.
 const Utf8BOM = "\uFEFF"
 
 // Format formats a slice of strings as a single, comma-separated string. Each element in the slice will be separated
@@ -114,6 +116,8 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	return ""
 }
 
+// ManualConvert performs a manual conversion of the input data.
+// It applies the specified rules or transformations to achieve the desired output.
 func ManualConvert[T any](data []T, headers []string, onRecord func(data T) []string) string {
 	size := len(data)
 	if size == 0 {
@@ -132,6 +136,8 @@ func ManualConvert[T any](data []T, headers []string, onRecord func(data T) []st
 	return fmt.Sprintf("%s%s", Utf8BOM, buffer.String())
 }
 
+// TryConvert attempts to convert the input data to the specified format.
+// It handles errors gracefully and returns the converted result along with an error (if any).
 func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	if len(data) == 0 {
 		return ""
@@ -163,7 +169,7 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 			index := no - 1
 			nmap[index] = i
 			hmap[index] = header
-			cols += 1
+			cols++
 		}
 	}
 

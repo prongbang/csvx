@@ -34,6 +34,8 @@ func IsFloat(t reflect.Type) bool {
 	return false
 }
 
+// IsPointer checks whether the given interface is a pointer.
+// Returns true if the input is a pointer type, otherwise false.
 func IsPointer(t reflect.Type) bool {
 	return t.Kind() == reflect.Pointer || t.Kind() == reflect.Ptr
 }

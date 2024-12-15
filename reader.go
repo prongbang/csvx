@@ -20,6 +20,8 @@ func ReadByte(filename string) []byte {
 	return data
 }
 
+// ByteReader creates an io.Reader from a byte slice.
+// It allows the byte data to be read sequentially as a stream.
 func ByteReader(data []byte, options ...func(r *csv.Reader)) [][]string {
 	// Create a bytes.Reader from the byte slice
 	byteReader := bytes.NewReader(data)
@@ -30,6 +32,8 @@ func ByteReader(data []byte, options ...func(r *csv.Reader)) [][]string {
 	return Reader(r, options...)
 }
 
+// Reader wraps an existing io.Reader to provide additional functionality.
+// It may include features like buffering or line-by-line reading.
 func Reader(r *csv.Reader, options ...func(r *csv.Reader)) [][]string {
 	r.LazyQuotes = true
 	r.Comma = ','
