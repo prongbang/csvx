@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const Utf8BOM = "\uFEFF"
+
 // Format formats a slice of strings as a single, comma-separated string. Each element in the slice will be separated
 // by a comma and a space. This function can be used to generate formatted output for CSV files or other data formats
 // that use comma-separated values. If the input slice is empty, this function will return an empty string.
@@ -127,7 +129,7 @@ func ManualConvert[T any](data []T, headers []string, onRecord func(data T) []st
 		_ = w.Write(row)
 	}
 	w.Flush()
-	return buffer.String()
+	return fmt.Sprintf("%s%s", Utf8BOM, buffer.String())
 }
 
 func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
@@ -165,7 +167,6 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 		}
 	}
 
-	utf8BOM := "\uFEFF"
 	var headers strings.Builder
 	var records strings.Builder
 
@@ -207,7 +208,7 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 		}
 	}
 
-	return fmt.Sprintf("%s%s\n%s", utf8BOM, headers.String(), records.String())
+	return fmt.Sprintf("%s%s\n%s", Utf8BOM, headers.String(), records.String())
 }
 
 func headerLookup[T any](d T, c int) (string, bool) {
