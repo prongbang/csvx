@@ -165,6 +165,7 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 		}
 	}
 
+	utf8BOM := "\uFEFF"
 	var headers strings.Builder
 	var records strings.Builder
 
@@ -206,7 +207,7 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 		}
 	}
 
-	return fmt.Sprintf("%s\n%s", headers.String(), records.String())
+	return fmt.Sprintf("%s%s\n%s", utf8BOM, headers.String(), records.String())
 }
 
 func headerLookup[T any](d T, c int) (string, bool) {
