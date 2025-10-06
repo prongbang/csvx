@@ -92,6 +92,11 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 						if IsPointer(value.Type()) {
 							if value.Elem().IsValid() {
 								nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value.Elem()))
+							} else {
+								// Use default from tag
+								if def, dOk := defaultLookup[T](d, c); dOk {
+									nValue = def
+								}
 							}
 						} else {
 							nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value))
@@ -110,7 +115,7 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 
 		// Add enter end line
 		result := strings.Join(sheets, "\n")
-		return result
+		return Utf8BOM + result
 	}
 
 	return ""
@@ -157,9 +162,11 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	numField := t.NumField()
 	hmap := make(map[int]string)
 	nmap := make(map[int]int)
+	dmap := make(map[int]string)
 	for i := 0; i < numField; i++ {
 		header, hOk := headerLookup[T](data[0], i)
 		noStr, nOk := noLookup[T](data[0], i)
+		def, _ := defaultLookup[T](data[0], i)
 		if hOk && nOk {
 			no, err := strconv.Atoi(noStr)
 			if err != nil {
@@ -169,6 +176,7 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 			index := no - 1
 			nmap[index] = i
 			hmap[index] = header
+			dmap[index] = def
 			cols++
 		}
 	}
@@ -200,6 +208,9 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 				if IsPointer(field.Type()) {
 					if field.Elem().IsValid() {
 						value = fmt.Sprintf(valueFormatCore, field.Elem())
+					} else {
+						// Use default from tag
+						value = dmap[c]
 					}
 				} else {
 					value = fmt.Sprintf(valueFormatCore, field)
@@ -223,4 +234,8 @@ func headerLookup[T any](d T, c int) (string, bool) {
 
 func noLookup[T any](d T, c int) (string, bool) {
 	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("no")
+}
+
+func defaultLookup[T any](d T, c int) (string, bool) {
+	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("default")
 }
