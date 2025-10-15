@@ -94,10 +94,8 @@ s := csvx.Parser[Struct](rows)
 goos: darwin
 goarch: arm64
 pkg: github.com/prongbang/csvx
-cpu: Apple M1 Pro
-BenchmarkConvert-10          	  430015	      5751 ns/op
-BenchmarkManualConvert
-BenchmarkManualConvert-10    	 2002738	       614.8 ns/op
-BenchmarkTryConvert
-BenchmarkTryConvert-10    	      760494	      1573 ns/op
+cpu: Apple M4 Pro
+BenchmarkConvert-12    	  		759810	      1541 ns/op	     728 B/op	      35 allocs/op
+BenchmarkManualConvert-12    	2311724	      505.6 ns/op	    4346 B/op	       8 allocs/op
+BenchmarkTryConvert-12    	 	1177716	      1011 ns/op	     496 B/op	      31 allocs/op
 ```
