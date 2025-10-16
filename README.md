@@ -99,3 +99,10 @@ BenchmarkConvert-12    	  		759810	      1541 ns/op	     728 B/op	      35 alloc
 BenchmarkManualConvert-12    	2311724	      505.6 ns/op	    4346 B/op	       8 allocs/op
 BenchmarkTryConvert-12    	 	1177716	      1011 ns/op	     496 B/op	      31 allocs/op
 ```
+
+## 🙏 Acknowledgments
+
+- Built with GO
+- IDE Support by [GoLand free 30-day trial.](https://www.jetbrains.com/go/)
+
+---
