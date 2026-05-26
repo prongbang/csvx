@@ -1,8 +1,10 @@
 package csvx_test
 
 import (
+	"encoding/csv"
 	"encoding/json"
-	"fmt"
+	"errors"
+	"strings"
 	"testing"
 
 	"github.com/prongbang/csvx"
@@ -25,6 +27,28 @@ type StructPointerType struct {
 	Age  *float64 `header:"Age" no:"3"`
 }
 
+type StructAllTypes struct {
+	ID     int64   `header:"ID"`
+	Count  uint64  `header:"Count"`
+	Age    float64 `header:"Age"`
+	Active bool    `header:"Active"`
+}
+
+type StructAllPointerTypes struct {
+	ID     *int64   `header:"ID"`
+	Count  *uint64  `header:"Count"`
+	Age    *float64 `header:"Age"`
+	Active *bool    `header:"Active"`
+}
+
+type StructWithStructField struct {
+	Value struct{} `header:"Value"`
+}
+
+type StructWithPointerStructField struct {
+	Value *struct{} `header:"Value"`
+}
+
 func TestParserString(t *testing.T) {
 	// Given
 	rows := [][]string{
@@ -43,6 +67,12 @@ func TestParserString(t *testing.T) {
 	data, _ := json.Marshal(s)
 	if string(data) != expected {
 		t.Error("Parse csv format to array struct error", data)
+	}
+}
+
+func TestParserStringEmpty(t *testing.T) {
+	if result := csvx.ParserString[Struct](nil); len(result) != 0 {
+		t.Error("ParserString empty error", result)
 	}
 }
 
@@ -76,6 +106,31 @@ func TestParser(t *testing.T) {
 	}
 }
 
+func TestParserEmpty(t *testing.T) {
+	if result := csvx.Parser[StructType](nil); len(result) != 0 {
+		t.Error("Parser empty error", result)
+	}
+}
+
+func TestParserAllTypes(t *testing.T) {
+	// Given
+	rows := [][]string{
+		{"ID", "Count", "Age", "Active"},
+		{"1", "2", "3.14", "true"},
+		{"bad", "bad", "bad", "bad"},
+	}
+	expected := `[{"ID":1,"Count":2,"Age":3.14,"Active":true},{"ID":0,"Count":0,"Age":0,"Active":false}]`
+
+	// When
+	result := csvx.Parser[StructAllTypes](rows)
+
+	// Then
+	data, _ := json.Marshal(result)
+	if string(data) != expected {
+		t.Error("Parser all types error", string(data))
+	}
+}
+
 func TestParserPointer(t *testing.T) {
 	// Given
 	rows := [][]string{
@@ -106,6 +161,51 @@ func TestParserPointer(t *testing.T) {
 	}
 }
 
+func TestParserAllPointerTypes(t *testing.T) {
+	// Given
+	rows := [][]string{
+		{"ID", "Count", "Age", "Active"},
+		{"1", "2", "3.14", "true"},
+		{"bad", "bad", "bad", "bad"},
+	}
+	expected := `[{"ID":1,"Count":2,"Age":3.14,"Active":true},{"ID":null,"Count":null,"Age":null,"Active":false}]`
+
+	// When
+	result := csvx.Parser[StructAllPointerTypes](rows)
+
+	// Then
+	data, _ := json.Marshal(result)
+	if string(data) != expected {
+		t.Error("Parser all pointer types error", string(data))
+	}
+}
+
+func TestParserStructFieldPanics(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Parser struct field should panic")
+		}
+	}()
+
+	_ = csvx.Parser[StructWithStructField]([][]string{
+		{"Value"},
+		{"value"},
+	})
+}
+
+func TestParserPointerStructFieldPanics(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Parser pointer struct field should panic")
+		}
+	}()
+
+	_ = csvx.Parser[StructWithPointerStructField]([][]string{
+		{"Value"},
+		{"value"},
+	})
+}
+
 func TestParserFunc(t *testing.T) {
 	// Given
 	rows := [][]string{
@@ -117,8 +217,58 @@ func TestParserFunc(t *testing.T) {
 	}
 
 	// When
+	called := 0
 	_ = csvx.ParserFunc(true, rows, func(record []string) error {
-		fmt.Println(record)
+		called++
+		if record[0] == "ID" {
+			t.Error("ParserFunc should exclude header")
+		}
 		return nil
 	})
+
+	// Then
+	if called != 4 {
+		t.Error("ParserFunc called error", called)
+	}
+}
+
+func TestParserFuncIncludeHeaderAndError(t *testing.T) {
+	// Given
+	rows := [][]string{
+		{"ID"},
+		{"1"},
+	}
+	expectedErr := errors.New("stop")
+	called := 0
+
+	// When
+	err := csvx.ParserFunc(false, rows, func(record []string) error {
+		called++
+		if called == 1 && record[0] != "ID" {
+			t.Error("ParserFunc should include header")
+		}
+		return expectedErr
+	})
+
+	// Then
+	if !errors.Is(err, expectedErr) {
+		t.Error("ParserFunc error mismatch", err)
+	}
+	if called != 1 {
+		t.Error("ParserFunc should stop on error")
+	}
+}
+
+func TestParserByReader(t *testing.T) {
+	// Given
+	reader := csv.NewReader(strings.NewReader("ID;Name Space;Age\n1;Name1;3.14\n"))
+
+	// When
+	result := csvx.ParserByReader[StructType](reader, ';')
+
+	// Then
+	data, _ := json.Marshal(result)
+	if string(data) != `[{"ID":1,"Name":"Name1","Age":3.14}]` {
+		t.Error("ParserByReader error", string(data))
+	}
 }

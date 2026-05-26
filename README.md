@@ -15,17 +15,19 @@ go get github.com/prongbang/csvx
 
 ## Define struct for Convert
 
-Add `header` for mapping in csv header and `no` start with 1 for sort header
+Add `header` for mapping in csv header and `no` start with 1 for sort header.
+Use `default` for nil pointer values and `decimal` for fixed float precision.
 
 ```go
 type MyStruct struct {
-    Name  	string 	`json:"name" header:"Name Space" no:"2"`
-    ID    	int    	`json:"id" header:"ID" no:"1"`
+    Name    string  `json:"name" header:"Name Space" no:"2"`
+    ID      int     `json:"id" header:"ID" no:"1"`
     Address *string `json:"address" header:"Address" no:"4" default:"N/A"`
     Phone   *string `json:"phone" header:"Phone" no:"3" default:"NULL"`
     Email   *string `json:"email" header:"Email" no:"5"`
     Age     *string `json:"age" header:"Age" no:"6" default:"999"`
-    Other string
+    Amount  float64 `json:"amount" header:"Amount" no:"7" decimal:"2"`
+    Other   string
 }
 ```
 
@@ -33,7 +35,9 @@ type MyStruct struct {
 
 - `int`, `int8`, `int16`, `int32`, `int64`
 - `string`
+- `float32`
 - `float64`
+- pointer values for supported types
 
 ## Using for Convert
 
@@ -45,12 +49,48 @@ m := []MyStruct{
 csv := csvx.Convert[MyStruct](m)
 ```
 
+## Using for ConvertWith
+
+`ConvertWith` supports options. Decimal options override the `decimal` tag.
+
+```go
+type Product struct {
+    ID     int     `json:"id" header:"ID" no:"1"`
+    Amount float64 `json:"amount" header:"Amount" no:"2" decimal:"1"`
+    Price  float64 `json:"price" header:"Price" no:"3"`
+}
+
+products := []Product{
+    {ID: 1, Amount: 12.34, Price: 99.999},
+}
+
+csv := csvx.ConvertWith(
+    products,
+    csvx.WithDecimal("Price", 2),
+)
+```
+
+## ConvertWith options
+
+- `WithDecimal(field, precision)` sets precision for one float field.
+- `WithDecimals(map[string]int{...})` sets precision for multiple float fields.
+- `WithIgnoreDoubleQuote(true)` disables wrapping cells with double quotes.
+
+The `field` value can be a struct field name, `field` tag, or `header` tag.
+
 ## Result
 
 ```csv
 "ID","Name Space"
 "1","N1"
 "2","N2"
+```
+
+## ConvertWith Result
+
+```csv
+"ID","Amount","Price"
+"1","12.3","100.00"
 ```
 
 ## Define struct for Parse
@@ -95,9 +135,10 @@ goos: darwin
 goarch: arm64
 pkg: github.com/prongbang/csvx
 cpu: Apple M4 Pro
-BenchmarkConvert-12    	  		759810	      1541 ns/op	     728 B/op	      35 allocs/op
-BenchmarkManualConvert-12    	2311724	      505.6 ns/op	    4346 B/op	       8 allocs/op
-BenchmarkTryConvert-12    	 	1177716	      1011 ns/op	     496 B/op	      31 allocs/op
+BenchmarkConvert-12          	  731186	      1609 ns/op	     728 B/op	      35 allocs/op
+BenchmarkConvertWith-12      	  695539	      1706 ns/op	     992 B/op	      36 allocs/op
+BenchmarkManualConvert-12    	 2286088	      534.1 ns/op	    4346 B/op	       8 allocs/op
+BenchmarkTryConvert-12       	 1000000	      1008 ns/op	     496 B/op	      31 allocs/op
 ```
 
 ## 🙏 Acknowledgments

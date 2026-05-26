@@ -13,6 +13,48 @@ import (
 // It is used to signal UTF-8 encoding in text files for better compatibility with tools like Excel.
 const Utf8BOM = "\uFEFF"
 
+type convertConfig struct {
+	ignoreDoubleQuote bool
+	decimals          map[string]int
+}
+
+type ConvertOption func(*convertConfig)
+
+// WithIgnoreDoubleQuote controls whether ConvertWith wraps CSV cells with double quotes.
+func WithIgnoreDoubleQuote(ignore bool) ConvertOption {
+	return func(config *convertConfig) {
+		config.ignoreDoubleQuote = ignore
+	}
+}
+
+// WithDecimal sets decimal precision for a float field by struct field name, field tag, or header tag.
+func WithDecimal(field string, precision int) ConvertOption {
+	return func(config *convertConfig) {
+		if precision < 0 {
+			return
+		}
+		if config.decimals == nil {
+			config.decimals = map[string]int{}
+		}
+		config.decimals[field] = precision
+	}
+}
+
+// WithDecimals sets decimal precision for multiple float fields.
+func WithDecimals(decimals map[string]int) ConvertOption {
+	return func(config *convertConfig) {
+		for field, precision := range decimals {
+			if precision < 0 {
+				continue
+			}
+			if config.decimals == nil {
+				config.decimals = map[string]int{}
+			}
+			config.decimals[field] = precision
+		}
+	}
+}
+
 // Format formats a slice of strings as a single, comma-separated string. Each element in the slice will be separated
 // by a comma and a space. This function can be used to generate formatted output for CSV files or other data formats
 // that use comma-separated values. If the input slice is empty, this function will return an empty string.
@@ -37,13 +79,30 @@ func Format(cell []string) string {
 //	"1","N1"
 //	"2","N2"
 func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
+	config := convertConfig{}
+	if len(ignoreDoubleQuote) > 0 {
+		config.ignoreDoubleQuote = ignoreDoubleQuote[0]
+	}
+	return convert(data, config)
+}
+
+// ConvertWith converts array struct to csv format with options.
+func ConvertWith[T any](data []T, options ...ConvertOption) string {
+	config := convertConfig{}
+	for _, option := range options {
+		option(&config)
+	}
+	return convert(data, config)
+}
+
+func convert[T any](data []T, config convertConfig) string {
 	size := len(data)
 	if size > 0 {
 
 		// Config format value
 		valueFormatCore := "%v"
 		valueFormat := "\"%v\""
-		if len(ignoreDoubleQuote) > 0 {
+		if config.ignoreDoubleQuote {
 			valueFormat = valueFormatCore
 		}
 
@@ -86,12 +145,17 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 						headers[i-1] = fmt.Sprintf(valueFormat, field)
 					}
 					if IsFloat(value.Type()) {
-						rows[r][i-1] = fmt.Sprintf(valueFormat, F64ToString(value.Float()))
+						rows[r][i-1] = fmt.Sprintf(valueFormat, floatToString(d, c, value.Float(), config))
 					} else {
 						nValue := ""
 						if IsPointer(value.Type()) {
 							if value.Elem().IsValid() {
-								nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value.Elem()))
+								elem := value.Elem()
+								if IsFloat(elem.Type()) {
+									nValue = floatToString(d, c, elem.Float(), config)
+								} else {
+									nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, elem))
+								}
 							} else {
 								// Use default from tag
 								if def, dOk := defaultLookup[T](d, c); dOk {
@@ -119,6 +183,45 @@ func Convert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	}
 
 	return ""
+}
+
+func decimalLookup[T any](d T, c int) (string, bool) {
+	return reflect.ValueOf(d).Type().Field(c).Tag.Lookup("decimal")
+}
+
+func floatToString[T any](d T, c int, value float64, config convertConfig) string {
+	precision, ok := decimalPrecision(d, c, config)
+	if !ok {
+		return F64ToString(value)
+	}
+	return strconv.FormatFloat(value, 'f', precision, 64)
+}
+
+func decimalPrecision[T any](d T, c int, config convertConfig) (int, bool) {
+	structField := reflect.ValueOf(d).Type().Field(c)
+	if config.decimals != nil {
+		if precision, ok := config.decimals[structField.Name]; ok {
+			return precision, true
+		}
+		for _, tag := range []string{"field", "header"} {
+			if field, ok := structField.Tag.Lookup(tag); ok {
+				if precision, ok := config.decimals[field]; ok {
+					return precision, true
+				}
+			}
+		}
+	}
+
+	decimal, ok := decimalLookup(d, c)
+	if !ok {
+		return 0, false
+	}
+
+	precision, err := strconv.Atoi(decimal)
+	if err != nil || precision < 0 {
+		return 0, false
+	}
+	return precision, true
 }
 
 // ManualConvert performs a manual conversion of the input data.

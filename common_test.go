@@ -11,6 +11,22 @@ func TestIsFloat(t *testing.T) {
 	if !csvx.IsFloat(ty) {
 		t.Error("Is Not Float")
 	}
+	if !csvx.IsFloat(reflect.TypeOf(float32(0))) {
+		t.Error("Float32 is not float")
+	}
+	if csvx.IsFloat(reflect.TypeOf(1)) {
+		t.Error("Int is float")
+	}
+}
+
+func TestIsPointer(t *testing.T) {
+	value := ""
+	if !csvx.IsPointer(reflect.TypeOf(&value)) {
+		t.Error("Is not pointer")
+	}
+	if csvx.IsPointer(reflect.TypeOf(value)) {
+		t.Error("String is pointer")
+	}
 }
 
 func TestF64ToString(t *testing.T) {
@@ -23,6 +39,14 @@ func TestF64ToString(t *testing.T) {
 func TestRemoveDoubleQuote(t *testing.T) {
 	text := "\ufeff\"hello\" world\""
 	expect := "hello\" world"
+	if csvx.RemoveDoubleQuote(text) != expect {
+		t.Error("Actual is not eq", expect)
+	}
+}
+
+func TestRemoveDoubleQuoteWithoutWrappingQuotes(t *testing.T) {
+	text := "\ufeffhello"
+	expect := "hello"
 	if csvx.RemoveDoubleQuote(text) != expect {
 		t.Error("Actual is not eq", expect)
 	}
