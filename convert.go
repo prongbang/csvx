@@ -18,6 +18,7 @@ type convertConfig struct {
 	decimals          map[string]int
 }
 
+// ConvertOption configures conversion behavior for ConvertWith.
 type ConvertOption func(*convertConfig)
 
 // WithIgnoreDoubleQuote controls whether ConvertWith wraps CSV cells with double quotes.
