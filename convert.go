@@ -101,10 +101,6 @@ func convert[T any](data []T, config convertConfig) string {
 
 		// Config format value
 		valueFormatCore := "%v"
-		valueFormat := "\"%v\""
-		if config.ignoreDoubleQuote {
-			valueFormat = valueFormatCore
-		}
 
 		// Initialize the element
 		var headers []string
@@ -142,10 +138,10 @@ func convert[T any](data []T, config convertConfig) string {
 
 				if i, err := strconv.Atoi(index); err == nil {
 					if r == 0 {
-						headers[i-1] = fmt.Sprintf(valueFormat, field)
+						headers[i-1] = wrapCell(field, config.ignoreDoubleQuote)
 					}
 					if IsFloat(value.Type()) {
-						rows[r][i-1] = fmt.Sprintf(valueFormat, floatToString(d, c, value.Float(), config))
+						rows[r][i-1] = wrapCell(floatToString(d, c, value.Float(), config), config.ignoreDoubleQuote)
 					} else {
 						nValue := ""
 						if IsPointer(value.Type()) {
@@ -165,7 +161,7 @@ func convert[T any](data []T, config convertConfig) string {
 						} else {
 							nValue = RemoveDoubleQuote(fmt.Sprintf(valueFormatCore, value))
 						}
-						rows[r][i-1] = fmt.Sprintf(valueFormat, nValue)
+						rows[r][i-1] = wrapCell(nValue, config.ignoreDoubleQuote)
 					}
 				}
 			}
@@ -253,10 +249,7 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 
 	// Config format value
 	valueFormatCore := "%v"
-	valueFormat := "\"%v\""
-	if len(ignoreDoubleQuote) > 0 {
-		valueFormat = valueFormatCore
-	}
+	ignore := len(ignoreDoubleQuote) > 0
 
 	// Use reflection to get the type of the struct
 	t := reflect.TypeOf(data[0])
@@ -305,7 +298,7 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 			field := el.Field(idx)
 
 			if IsFloat(field.Type()) {
-				records.WriteString(fmt.Sprintf(valueFormat, F64ToString(field.Float())))
+				records.WriteString(wrapCell(F64ToString(field.Float()), ignore))
 			} else {
 				value := ""
 				if IsPointer(field.Type()) {
@@ -318,7 +311,7 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 				} else {
 					value = fmt.Sprintf(valueFormatCore, field)
 				}
-				records.WriteString(fmt.Sprintf(valueFormat, value))
+				records.WriteString(wrapCell(value, ignore))
 			}
 			if c < cols-1 {
 				records.WriteString(",")
@@ -329,6 +322,14 @@ func TryConvert[T any](data []T, ignoreDoubleQuote ...bool) string {
 	}
 
 	return fmt.Sprintf("%s%s\n%s", Utf8BOM, headers.String(), records.String())
+}
+
+// wrapCell quotes a cell with QuoteCell unless quoting is turned off.
+func wrapCell(value string, ignoreDoubleQuote bool) string {
+	if ignoreDoubleQuote {
+		return value
+	}
+	return QuoteCell(value)
 }
 
 func headerLookup[T any](d T, c int) (string, bool) {

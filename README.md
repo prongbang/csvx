@@ -93,6 +93,25 @@ The `field` value can be a struct field name, `field` tag, or `header` tag.
 "1","12.3","100.00"
 ```
 
+## Quote every cell (dynamic columns / streaming)
+
+Every cell is wrapped in double quotes and a double quote inside a value is escaped as `""` (RFC 4180),
+so values containing `,`, `"` or a line break never shift columns.
+
+```go
+csvx.QuoteCell(`say "hi", ok`)            // "say ""hi"", ok"
+csvx.FormatQuoted([]string{"1", "a,b"})   // "1","a,b"
+
+// Same API as encoding/csv.Writer, but quotes every cell
+w := csvx.NewQuotedWriter(gzipWriter)
+_ = w.Write([]string{"ID", "Name"})
+_ = w.Write([]string{"1", "Lotus's, Bangna"})
+w.Flush()
+if err := w.Error(); err != nil {
+    // handle
+}
+```
+
 ## Define struct for Parse
 
 Add `header` for mapping in csv header
